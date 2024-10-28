@@ -6,19 +6,26 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Book } from './schemas/book.schema';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { GetBookParams } from './params/get-book.params';
-import { UpdateBookParams } from './params/update-book.params';
-import { DeleteBookParams } from './params/delete-book.params';
+import { GetBookParam } from './params/get-book.param';
+import { UpdateBookParam } from './params/update-book.param';
+import { DeleteBookParam } from './params/delete-book.param';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/auth/enums/role.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('books')
+@UseGuards(AuthGuard, RolesGuard)
 export class BookController {
   constructor(private bookService: BookService) {}
 
+  @Roles(Role.User)
   @Get()
   async getAllBooks(): Promise<Book[]> {
     return this.bookService.findAll();
@@ -31,20 +38,20 @@ export class BookController {
   }
 
   @Get(':id')
-  async getBook(@Param() { id }: GetBookParams): Promise<Book> {
+  async getBook(@Param() { id }: GetBookParam): Promise<Book> {
     return this.bookService.findById(id);
   }
 
   @Put(':id')
   async updateBook(
-    @Param() { id }: UpdateBookParams,
+    @Param() { id }: UpdateBookParam,
     @Body() book: UpdateBookDto,
   ): Promise<Book> {
     return this.bookService.updateById(id, book);
   }
 
   @Delete(':id')
-  async deleteBook(@Param() { id }: DeleteBookParams) {
+  async deleteBook(@Param() { id }: DeleteBookParam) {
     return this.bookService.deleteById(id);
   }
 }

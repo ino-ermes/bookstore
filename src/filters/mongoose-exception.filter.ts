@@ -2,12 +2,10 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
-  HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import mongoose from 'mongoose';
-import { Request, Response } from 'express';
-
+import { Response } from 'express';
 @Catch(mongoose.Error)
 export class MongooseExceptionFilter implements ExceptionFilter {
   catch(exception: mongoose.Error, host: ArgumentsHost) {
