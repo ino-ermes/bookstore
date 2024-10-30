@@ -8,6 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Category } from '../schemas/book.schema';
+import { Transform } from 'class-transformer';
 
 export class CreateBookDto {
   @IsNotEmpty()
@@ -26,9 +27,9 @@ export class CreateBookDto {
   readonly description: string;
 
   @IsNotEmpty()
-  @IsNumber()
   @Min(0)
   @Max(100)
+  @Transform(({ value }) => parseFloat(value))
   readonly price: number;
 
   @IsNotEmpty()
