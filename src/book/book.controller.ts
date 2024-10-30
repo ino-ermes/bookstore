@@ -36,12 +36,12 @@ export class BookController {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  @Roles(Role.User)
   @Get()
   async getAllBooks(): Promise<Book[]> {
     return this.bookService.findAll();
   }
 
+  @Roles(Role.Admin)
   @Post()
   @UseInterceptors(FileInterceptor('cover'))
   async createBook(
@@ -74,6 +74,7 @@ export class BookController {
     return this.bookService.findById(id);
   }
 
+  @Roles(Role.Admin)
   @Put(':id')
   @UseInterceptors(FileInterceptor('cover'))
   async updateBook(
@@ -82,7 +83,7 @@ export class BookController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 10000 }),
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
           new FileTypeValidator({ fileType: /(image\/jpeg|image\/png)/ }),
         ],
         fileIsRequired: false,
@@ -103,6 +104,7 @@ export class BookController {
     return this.bookService.updateById(id, { ...book, cover: coverUrl });
   }
 
+  @Roles(Role.Admin)
   @Delete(':id')
   async deleteBook(@Param() { id }: DeleteBookParam) {
     return this.bookService.deleteById(id);

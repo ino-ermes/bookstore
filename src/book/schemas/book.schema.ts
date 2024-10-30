@@ -25,6 +25,9 @@ export class Book {
   @Prop({ required: true })
   price: number;
 
+  @Prop({ required: true, default: 0 })
+  count: number;
+
   @Prop({ required: true })
   category: Category;
 }

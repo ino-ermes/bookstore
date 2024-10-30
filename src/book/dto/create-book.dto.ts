@@ -33,6 +33,12 @@ export class CreateBookDto {
   readonly price: number;
 
   @IsNotEmpty()
+  @Min(0)
+  @Max(100)
+  @Transform(({ value }) => parseFloat(value))
+  readonly count: number;
+
+  @IsNotEmpty()
   @IsEnum(Category)
   readonly category: Category;
 }

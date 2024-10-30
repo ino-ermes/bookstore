@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { Category } from '../schemas/book.schema';
 import {
   IsEnum,
@@ -26,10 +27,16 @@ export class UpdateBookDto {
   readonly description: string;
 
   @IsNotEmpty()
-  @IsNumber()
   @Min(0)
   @Max(100)
+  @Transform(({ value }) => parseFloat(value))
   readonly price: number;
+
+  @IsNotEmpty()
+  @Min(0)
+  @Max(100)
+  @Transform(({ value }) => parseFloat(value))
+  readonly count: number;
 
   @IsNotEmpty()
   @IsEnum(Category)

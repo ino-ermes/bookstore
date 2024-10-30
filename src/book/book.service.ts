@@ -38,6 +38,10 @@ export class BookService {
       runValidators: true,
     });
 
+    if (!res) {
+      throw new NotFoundException('Book not found');
+    }
+
     return res;
   }
 
