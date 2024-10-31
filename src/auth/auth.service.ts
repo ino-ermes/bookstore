@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -11,6 +12,8 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from './enums/role.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +28,7 @@ export class AuthService {
       _id: mongoose.Types.ObjectId;
       username: string;
       email: string;
-      roles: Role[];
+      role: Role;
     };
     accessToken: string;
   }> {
@@ -39,7 +42,7 @@ export class AuthService {
 
       const payload = {
         id: user._id,
-        roles: user.roles,
+        role: user.role,
       };
 
       const accessToken = await this.jwtService.signAsync(payload);
@@ -49,7 +52,7 @@ export class AuthService {
           _id: user._id,
           username: user.username,
           email: user.email,
-          roles: user.roles,
+          role: user.role,
         },
         accessToken,
       };
@@ -63,11 +66,13 @@ export class AuthService {
       _id: mongoose.Types.ObjectId;
       username: string;
       email: string;
-      roles: Role[];
+      role: Role;
     };
     accessToken: string;
   }> {
-    const user = await this.userModel.findOne({ email: data.email });
+    const user = await this.userModel
+      .findOne({ email: data.email })
+      .select('+password');
     if (!user) {
       throw new UnauthorizedException('Email is not exist');
     }
@@ -83,7 +88,7 @@ export class AuthService {
 
     const payload = {
       id: user._id,
-      roles: user.roles,
+      role: user.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
@@ -93,9 +98,61 @@ export class AuthService {
         _id: user._id,
         username: user.username,
         email: user.email,
-        roles: user.roles,
+        role: user.role,
       },
       accessToken,
     };
+  }
+
+  async updateById(id: string, user: UpdateUserDto & { avatar?: string }) {
+    const res = await this.userModel.findByIdAndUpdate(id, user, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!res) {
+      throw new NotFoundException();
+    }
+
+    return res;
+  }
+
+  async changePasswordById(id: string, data: ChangePasswordDto) {
+    const user = await this.userModel.findById(id).select('password');
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const isCorrectPassword = await bcrypt.compare(
+      data.password,
+      user.password,
+    );
+
+    if (!isCorrectPassword) {
+      throw new UnauthorizedException();
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      {
+        password: hashedPassword,
+      },
+      { new: true },
+    );
+
+    return updatedUser;
+  }
+
+  async findById(id: string) {
+    const user = await this.userModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return user;
   }
 }

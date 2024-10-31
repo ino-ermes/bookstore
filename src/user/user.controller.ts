@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   FileTypeValidator,
+  ForbiddenException,
   Get,
   InternalServerErrorException,
   MaxFileSizeValidator,
@@ -21,6 +22,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
@@ -63,7 +65,7 @@ export class UserController {
   @UseInterceptors(FileInterceptor('avatar'))
   async updateUser(
     @Param('id') id: string,
-    @Body() user: CreateUserDto,
+    @Body() user: UpdateUserDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -75,6 +77,11 @@ export class UserController {
     )
     avatar?: Express.Multer.File,
   ) {
+    const role = await this.userService.getUserRoleById(id);
+    if (role === Role.Admin) {
+      throw new ForbiddenException();
+    }
+
     let avatarUrl: string | undefined = undefined;
     if (avatar) {
       const { url } = await this.cloudinaryService
@@ -100,6 +107,11 @@ export class UserController {
 
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
+    const role = await this.userService.getUserRoleById(id);
+    if (role === Role.Admin) {
+      throw new ForbiddenException();
+    }
+
     return this.userService.deleteById(id);
   }
 }

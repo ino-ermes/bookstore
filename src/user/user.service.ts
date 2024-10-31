@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './schemas/user.schema';
 import mongoose from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Injectable()
 export class UserService {
@@ -25,13 +30,13 @@ export class UserService {
     return user;
   }
 
-  async create(user: User) {
+  async create(user: CreateUserDto & { avatar?: string }) {
     const res = await this.userModel.create(user);
 
     return res;
   }
 
-  async updateById(id: string, user: User) {
+  async updateById(id: string, user: UpdateUserDto & { avatar?: string }) {
     const res = await this.userModel.findByIdAndUpdate(id, user, {
       new: true,
       runValidators: true,
@@ -52,5 +57,29 @@ export class UserService {
     }
 
     return res;
+  }
+
+  async updatePasswordById(id: string, data: UpdatePasswordDto) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const res = await this.userModel.findByIdAndUpdate(
+      id,
+      {
+        password: hashedPassword,
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!res) {
+      throw new NotFoundException('User not found');
+    }
+
+    return res;
+  }
+
+  async getUserRoleById(id: string) {
+    const { role } = await this.userModel.findById(id).select('role');
+
+    return role;
   }
 }

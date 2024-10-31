@@ -9,7 +9,7 @@ export class User {
   @Prop({ unique: true, required: true })
   username: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, select: false })
   password: string;
 
   @Prop()
@@ -19,11 +19,11 @@ export class User {
   avatar?: string;
 
   @Prop({
-    type: [{ type: String, enum: Role }],
-    default: [Role.User],
+    enum: Role,
+    default: Role.User,
     required: true,
   })
-  roles: Role[];
+  role: Role;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
