@@ -6,6 +6,7 @@ export enum Category {
   CLASSICS = 'Classics',
   CRIME = 'Crime',
   FANTASY = 'Fantasy',
+  SLICE_OF_LIFE = 'Slice of life',
 }
 
 @Schema({ timestamps: true })
@@ -24,9 +25,6 @@ export class Book {
 
   @Prop({ required: true })
   price: number;
-
-  @Prop({ required: true, default: 0 })
-  count: number;
 
   @Prop({ required: true })
   category: Category;

@@ -11,7 +11,7 @@ export class BookService {
   ) {}
 
   async findAll(): Promise<Book[]> {
-    const books = await this.bookModel.find();
+    const books = await this.bookModel.find().select('-description');
 
     return books;
   }
